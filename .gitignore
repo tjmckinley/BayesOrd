@@ -1,0 +1,6 @@
+#ignore backup files
+*~
+
+#ignore shared object files
+*.so
+*.o
