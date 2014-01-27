@@ -4,3 +4,6 @@
 #ignore shared object files
 *.so
 *.o
+
+#ignore simulation folder (used for testing)
+simulation/*
