@@ -1,6 +1,6 @@
 Package: BayesOrd
 Type: Package
-Title: Bayesian method for fitting proportional and non-proportional odds
+Title: Bayesian methods for fitting proportional and non-proportional odds
     ordinal regression models
 Version: 1.0
 Date: 2014-01-28
