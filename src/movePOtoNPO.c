@@ -1,19 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_cdf.h>
-
+#include <R.h>
+#include <Rmath.h>
 #include"functions.h"
 
 //function to move PO parameter to NPO parameter
-void movePOtoNPO(int k, int n, int nbetagroup, int ntheta, double *beta, double *theta, double *psi, double *variables, int *betastatus, double *betacond, double *minvar, double *maxvar, double propsdb, double *loglikeorig, gsl_rng *rand_gen, double mnb, double *sdb, double sdt, double maxsdb, int fixed)
+void movePOtoNPO(int k, int n, int nbetagroup, int ntheta, double *beta, double *theta, double *psi, double *variables, int *betastatus, double *betacond, double *minvar, double *maxvar, double propsdb, double *loglikeorig, double mnb, double *sdb, double sdt, double maxsdb, int fixed)
 {
     int m, valid;
-    double *betacondstore = (double *)malloc((ntheta - 1) * sizeof(double));
-    double *u = (double *)malloc((ntheta - 1) * sizeof(double));
+    double *betacondstore = (double *) Calloc(ntheta - 1, double);
+    double *u = (double *) Calloc(ntheta - 1, double);
     double betastore, loglikeprop, temp, sdbstore, lower = 0.0, upper = 0.0;
     double accorig, accprop, acc;
 
@@ -27,7 +21,7 @@ void movePOtoNPO(int k, int n, int nbetagroup, int ntheta, double *beta, double 
     beta[index2(k, 0, nbetagroup)] = 0.0;
     for(m = 0; m < (ntheta - 1); m++)
     {
-        u[m] = gsl_ran_flat(rand_gen, -propsdb, propsdb);
+        u[m] = runif(-propsdb, propsdb);
         beta[index2(k, 0, nbetagroup)] += u[m];
     }
     beta[index2(k, 0, nbetagroup)] += betastore * (4.0 - (ntheta + 1));
@@ -40,7 +34,7 @@ void movePOtoNPO(int k, int n, int nbetagroup, int ntheta, double *beta, double 
     {
         lower = ((sdbstore - propsdb) < 0.0 ? 0.0 : (sdbstore - propsdb));
         upper = ((sdbstore + propsdb) > maxsdb ? maxsdb : (sdbstore + propsdb));
-        for(m = 1; m < ntheta; m++) sdb[index2(k, m, nbetagroup)] = gsl_ran_flat(rand_gen, lower, upper);
+        for(m = 1; m < ntheta; m++) sdb[index2(k, m, nbetagroup)] = runif(lower, upper);
     }
 
     //update validity conditions
@@ -64,8 +58,8 @@ void movePOtoNPO(int k, int n, int nbetagroup, int ntheta, double *beta, double 
             accprop = loglikeprop;
 
             //adjust for beta priors
-            accorig += log(gsl_ran_gaussian_pdf((betastore - mnb), sdbstore));
-            for(m = 0; m < ntheta; m++) accprop += log(gsl_ran_gaussian_pdf((beta[index2(k, m, nbetagroup)] - mnb), sdb[index2(k, m, nbetagroup)]));
+            accorig += dnorm((betastore - mnb), 0.0, sdbstore, 1);
+            for(m = 0; m < ntheta; m++) accprop += dnorm((beta[index2(k, m, nbetagroup)] - mnb), 0.0, sdb[index2(k, m, nbetagroup)], 1);
 
             if(fixed == 0)
             {
@@ -77,8 +71,8 @@ void movePOtoNPO(int k, int n, int nbetagroup, int ntheta, double *beta, double 
             //adjust for theta priors conditional on beta
             for(m = 1; m < ntheta; m++)
             {
-                accorig -= log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacondstore[m - 1], sdt));
-                accprop -= log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacond[m - 1], sdt));
+                accorig -= pnorm(theta[m - 1] - betacondstore[m - 1], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacondstore[m - 1], sdt));
+                accprop -= pnorm(theta[m - 1] - betacond[m - 1], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacond[m - 1], sdt));
             }
 
             //adjust for proposals
@@ -93,7 +87,7 @@ void movePOtoNPO(int k, int n, int nbetagroup, int ntheta, double *beta, double 
             //calculate acceptance
             acc = accprop - accorig;
             acc = exp(acc);
-            if(gsl_rng_uniform_pos(rand_gen) < acc)
+            if(runif(0.0, 1.0) < acc)
             {
                 (*loglikeorig) = loglikeprop;
                 //set beta status
@@ -126,7 +120,7 @@ void movePOtoNPO(int k, int n, int nbetagroup, int ntheta, double *beta, double 
         for(m = 0; m < (ntheta - 1); m++) betacond[m] = betacondstore[m];
     }
     //free memory from the heap
-    free(betacondstore);
-    free(u);
+    Free(betacondstore);
+    Free(u);
     return;
 }

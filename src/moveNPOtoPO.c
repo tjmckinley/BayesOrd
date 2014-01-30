@@ -1,20 +1,14 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_cdf.h>
-
+#include <R.h>
+#include<Rmath.h>
 #include"functions.h"
 
 //function to move NPO parameter to PO parameter
-void moveNPOtoPO(int k, int n, int nbetagroup, int ntheta, double *beta, double *theta, double *psi, double *variables, int *betastatus, double *betacond, double *minvar, double *maxvar, double propsdb, double *loglikeorig, gsl_rng *rand_gen, double mnb, double *sdb, double sdt, double maxsdb, int fixed)
+void moveNPOtoPO(int k, int n, int nbetagroup, int ntheta, double *beta, double *theta, double *psi, double *variables, int *betastatus, double *betacond, double *minvar, double *maxvar, double propsdb, double *loglikeorig, double mnb, double *sdb, double sdt, double maxsdb, int fixed)
 {
     int m;
-    double *betacondstore = (double *)malloc((ntheta - 1) * sizeof(double));
-    double *betastore = (double *)malloc(ntheta * sizeof(double));
-    double *sdbstore = (double *)malloc(ntheta * sizeof(double));
+    double *betacondstore = (double *) Calloc(ntheta - 1, double);
+    double *betastore = (double *) Calloc(ntheta, double);
+    double *sdbstore = (double *) Calloc(ntheta, double);
     double loglikeprop, temp, lower = 0.0, upper = 0.0;
     double accorig, accprop, acc;
 
@@ -53,13 +47,13 @@ void moveNPOtoPO(int k, int n, int nbetagroup, int ntheta, double *beta, double 
         accorig = (*loglikeorig);
         accprop = loglikeprop;
         //adjust for beta priors
-        accprop += log(gsl_ran_gaussian_pdf((beta[index2(k, 0, nbetagroup)] - mnb), sdb[index2(k, 0, nbetagroup)]));
-        for(m = 0; m < ntheta; m++) accorig += log(gsl_ran_gaussian_pdf((betastore[m] - mnb), sdbstore[m]));
+        accprop += dnorm((beta[index2(k, 0, nbetagroup)] - mnb), 0.0, sdb[index2(k, 0, nbetagroup)], 1);
+        for(m = 0; m < ntheta; m++) accorig += dnorm((betastore[m] - mnb), 0.0, sdbstore[m], 1);
         //adjust for theta priors conditional on beta
         for(m = 1; m < ntheta; m++)
         {
-            accorig -= log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacondstore[m - 1], sdt));
-            accprop -= log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacond[m - 1], sdt));
+            accorig -= pnorm(theta[m - 1] - betacondstore[m - 1], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacondstore[m - 1], sdt));
+            accprop -= pnorm(theta[m - 1] - betacond[m - 1], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacond[m - 1], sdt));
         }
         //adjust for SD priors
         if(fixed == 0)
@@ -80,7 +74,7 @@ void moveNPOtoPO(int k, int n, int nbetagroup, int ntheta, double *beta, double 
         //calculate acceptance
         acc = accprop - accorig;
         acc = exp(acc);
-        if(gsl_rng_uniform_pos(rand_gen) < acc)
+        if(runif(0.0, 1.0) < acc)
         {
             (*loglikeorig) = loglikeprop;
             //set beta status
@@ -104,8 +98,8 @@ void moveNPOtoPO(int k, int n, int nbetagroup, int ntheta, double *beta, double 
         for(m = 0; m < (ntheta - 1); m++) betacond[m] = betacondstore[m];
     }
     //free memory from the heap
-    free(betacondstore);
-    free(betastore);
-    free(sdbstore);
+    Free(betacondstore);
+    Free(betastore);
+    Free(sdbstore);
     return;
 }

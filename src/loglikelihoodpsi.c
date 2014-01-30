@@ -1,19 +1,17 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
+#include <R.h>
+#include <Rmath.h>
 #include"functions.h"
 
-//function to calculate the log-likelihood
-double loglikelihood(double *beta, double *theta, double *psi, double *variables, int n, int ntheta, int nbetagroup)
+//function to calculate the log-likelihood component relating to a single RE (psi) term
+double loglikelihood_psi(double *beta, double *theta, double *psi, double *variables, int n, int ntheta, int nbetagroup, int *psicount, int currpsi)
 {
     int i, j, k;
-    double *gamma = (double *) malloc(ntheta * sizeof(double));
-    double *p = (double *) malloc((ntheta + 1) * sizeof(double));
+    double *gamma = (double *) Calloc(ntheta, double);
+    double *p = (double *) Calloc((ntheta + 1), double);
     double loglike, mu;
 
     loglike = 0.0;
-    for(i = 0; i < n; i++)
+    for(i = psicount[currpsi]; i < psicount[currpsi + 1]; i++)
     {
         for(j = 0; j < ntheta; j++)
         {
@@ -28,7 +26,7 @@ double loglikelihood(double *beta, double *theta, double *psi, double *variables
         p[ntheta] = 1.0 - gamma[ntheta - 1];
         loglike += variables[index2(i, nbetagroup, n)] * log(p[(int) variables[index2(i, nbetagroup + 1, n)]]);
     }
-    free(gamma);
-    free(p);
+    Free(gamma);
+    Free(p);
     return loglike;
 }

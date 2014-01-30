@@ -65,7 +65,7 @@ print.summary.bayesord <- function(x, ...) {
             cat("\n")
             
             # now produce top models and variable PPAs
-            topmodels <- min(topmodels, nrow(x$models))
+            topmodels <- min(topmodels, nrow(x$models[[1]]))
             cat(paste("Top", topmodels, "models according to PPA:\n"))
             y <- do.call("rbind", x$models)
             y$group <- factor(apply(y[-ncol(y)], 1, function(x) paste(x, collapse = "+")))

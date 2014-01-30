@@ -1,7 +1,6 @@
 # summary function for 'bayesord' object
 summary.bayesord <- function(object, type = c("reg", "rand", "all"), scale = c("logOR", 
     "OR"), threshold = 0, topmodels = 5, digits = 2, ...) {
-    require(coda)
     if (class(object) != "bayesord") 
         stop("'object' is not a 'bayesord' object")
     if (type[1] != "reg" & type[1] != "rand" & type[1] != "all") 

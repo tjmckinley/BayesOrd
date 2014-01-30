@@ -1,6 +1,5 @@
 # window function for 'bayesord' objects
 window.bayesord <- function(x, start = NA, end = NA, thin = NA, chains = NA, ...) {
-    require(coda)
     if (class(x) != "bayesord") 
         stop("'x' is not a 'bayesord' object")
     if (!is.na(chains)) {
@@ -65,6 +64,7 @@ window.bayesord <- function(x, start = NA, end = NA, thin = NA, chains = NA, ...
             }
         }
     }
+    x$info$niter <- nrow(x$beta[[1]])
     x
 }
 

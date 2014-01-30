@@ -1,0 +1,22 @@
+export(bayesord)
+S3method(bayesord, default)
+
+importFrom("stats", window)
+import("coda")
+import("lattice")
+
+S3method(print, bayesord)
+S3method(plot, bayesord)
+S3method(summary, bayesord)
+S3method(window, bayesord)
+S3method(fitted, bayesord)
+
+S3method(print, summary.bayesord)
+
+S3method(print, fitted.bayesord)
+S3method(plot, fitted.bayesord)
+S3method(summary, fitted.bayesord)
+
+S3method(print, summary.fitted.bayesord)
+
+useDynLib(BayesOrd)

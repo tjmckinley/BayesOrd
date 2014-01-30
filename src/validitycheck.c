@@ -1,7 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
+#include <R.h>
+#include <Rmath.h>
 #include "functions.h"
 
 //function to check validity of proposals
@@ -24,12 +22,12 @@ int validitycheck(int ntheta, int nbetagroup, int *betastatus, double *beta, dou
         }
         if(fabs(betastore - betacond[j]) > 1e-10)
         {
-            printf("Something invalid in proposals for beta1\n");
+            Rprintf("Something invalid in proposals for beta1\n");
             return 1;
         }
         if((theta[j] - theta[j + 1]) > betastore)
         {
-            printf("Something invalid in proposals for beta2\n");
+            Rprintf("Something invalid in proposals for beta2\n");
             return 1;
         }
     }

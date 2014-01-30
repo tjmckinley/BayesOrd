@@ -1,15 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_cdf.h>
-
+#include <R.h>
+#include <Rmath.h>
 #include "functions.h"
 
 //function to move NPO parameters
-void moveNPO(int k, int n, int nbetagroup, int ntheta, double *beta, double *theta, double *psi, double *variables, double *betacond, double *minvar, double *maxvar, double propsdb, double *loglikeorig, gsl_rng *rand_gen, double mnb, double *sdb, double sdt)
+void moveNPO(int k, int n, int nbetagroup, int ntheta, double *beta, double *theta, double *psi, double *variables, double *betacond, double *minvar, double *maxvar, double propsdb, double *loglikeorig, double mnb, double *sdb, double sdt)
 {
     int m, valid;
     double betastore, betacondstore = 0.0, betacondstore1 = 0.0, loglikeprop, temp;
@@ -20,7 +14,7 @@ void moveNPO(int k, int n, int nbetagroup, int ntheta, double *beta, double *the
     {
         betastore = beta[index2(k, m, nbetagroup)];
         //sample new parameter value
-        beta[index2(k, m, nbetagroup)] = betastore + gsl_ran_flat(rand_gen, -propsdb, propsdb);
+        beta[index2(k, m, nbetagroup)] = betastore + runif(-propsdb, propsdb);
 
         //update and check prior constraints
         if(m == 0)
@@ -77,35 +71,35 @@ void moveNPO(int k, int n, int nbetagroup, int ntheta, double *beta, double *the
                 accprop = loglikeprop;
 
                 //adjust for beta priors
-                accorig += log(gsl_ran_gaussian_pdf((betastore - mnb), sdb[index2(k, m, nbetagroup)]));
-                accprop += log(gsl_ran_gaussian_pdf((beta[index2(k, m, nbetagroup)] - mnb), sdb[index2(k, m, nbetagroup)]));
+                accorig += dnorm((betastore - mnb), 0.0, sdb[index2(k, m, nbetagroup)], 1);
+                accprop += dnorm((beta[index2(k, m, nbetagroup)] - mnb), 0.0, sdb[index2(k, m, nbetagroup)], 1);
 
                 //adjust for conditional theta priors
                 if(m == 0)
                 {
-                    accorig -= log(1.0 - gsl_cdf_gaussian_P(theta[m] - betacondstore1, sdt));
-                    accprop -= log(1.0 - gsl_cdf_gaussian_P(theta[m] - betacond[m], sdt));
+                    accorig -= pnorm(theta[m] - betacondstore1, 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m] - betacondstore1, sdt));
+                    accprop -= pnorm(theta[m] - betacond[m], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m] - betacond[m], sdt));
                 }
                 else
                 {
                     if(m == (ntheta - 1))
                     {
-                        accorig -= log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacondstore, sdt));
-                        accprop -= log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacond[m - 1], sdt));
+                        accorig -= pnorm(theta[m - 1] - betacondstore, 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacondstore, sdt));
+                        accprop -= pnorm(theta[m - 1] - betacond[m - 1], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacond[m - 1], sdt));
                     }
                     else
                     {
-                        accorig -= log(1.0 - gsl_cdf_gaussian_P(theta[m] - betacondstore1, sdt));
-                        accprop -= log(1.0 - gsl_cdf_gaussian_P(theta[m] - betacond[m], sdt));
-                        accorig -= log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacondstore, sdt));
-                        accprop -= log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacond[m - 1], sdt));
+                        accorig -= pnorm(theta[m] - betacondstore1, 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m] - betacondstore1, sdt));
+                        accprop -= pnorm(theta[m] - betacond[m], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m] - betacond[m], sdt));
+                        accorig -= pnorm(theta[m - 1] - betacondstore, 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacondstore, sdt));
+                        accprop -= pnorm(theta[m - 1] - betacond[m - 1], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacond[m - 1], sdt));
                     }
                 }
                 //proposals cancel
                 //calculate acceptance
                 acc = accprop - accorig;
                 acc = exp(acc);
-                if(gsl_rng_uniform_pos(rand_gen) < acc) (*loglikeorig) = loglikeprop;
+                if(runif(0.0, 1.0) < acc) (*loglikeorig) = loglikeprop;
                 else
                 {
                     //reset update to previous value (as well as validity conditions)

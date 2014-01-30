@@ -1,21 +1,16 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_cdf.h>
+#include <R.h>
+#include <Rmath.h>
 
 #include"functions.h"
 
 //function to add parameters for variable not currently present in model
-void moveexctoinc(int k, int *xassign, int *betastatusvar, int n, int nbetagroup, int ntheta, double *beta, double *theta, double *psi, double *variables, int *betastatus, double *betacond, double *minvar, double *maxvar, double propsdb, double *loglikeorig, gsl_rng *rand_gen, double mnb, double *sdb, double sdt, double *pvec, double *pzero, double maxsdb, int fixed)
+void moveexctoinc(int k, int *xassign, int *betastatusvar, int n, int nbetagroup, int ntheta, double *beta, double *theta, double *psi, double *variables, int *betastatus, double *betacond, double *minvar, double *maxvar, double propsdb, double *loglikeorig, double mnb, double *sdb, double sdt, double *pvec, double *pzero, double maxsdb, int fixed)
 {
     int m, l, valid;
     double temp;
     double loglikeprop;
     double accorig, accprop, acc;
-    double *betacondstore = (double *)malloc((ntheta - 1) * sizeof(double));
+    double *betacondstore = (double *) Calloc((ntheta - 1), double);
     for(m = 0; m < (ntheta - 1); m++) betacondstore[m] = betacond[m];
 
     //set parameters
@@ -25,13 +20,13 @@ void moveexctoinc(int k, int *xassign, int *betastatusvar, int n, int nbetagroup
         if(betastatus[l] == 0)
         {
             //if parameter is to have PO structure
-            beta[index2(l, 0, nbetagroup)] = gsl_ran_gaussian(rand_gen, propsdb);
+            beta[index2(l, 0, nbetagroup)] = rnorm(0.0, propsdb);
             for(m = 1; m < ntheta; m++) beta[index2(l, m, nbetagroup)] = beta[index2(l, 0, nbetagroup)];
         }
         else
         {
             //if parameter is to have NPO structure
-            for(m = 0; m < ntheta; m++) beta[index2(l, m, nbetagroup)] = gsl_ran_gaussian(rand_gen, propsdb);
+            for(m = 0; m < ntheta; m++) beta[index2(l, m, nbetagroup)] = rnorm(0.0, propsdb);
 
             //update conditions
             for(m = 0; m < (ntheta - 1); m++)
@@ -61,13 +56,13 @@ void moveexctoinc(int k, int *xassign, int *betastatusvar, int n, int nbetagroup
                 if(betastatus[l] == 0)
                 {
                     //sample new parameters for PO
-                    sdb[index2(l, 0, nbetagroup)] = gsl_ran_flat(rand_gen, 0.0, maxsdb);
+                    sdb[index2(l, 0, nbetagroup)] = runif(0.0, maxsdb);
                     for(m = 1; m < ntheta; m++) sdb[index2(l, m, nbetagroup)] = sdb[index2(l, 0, nbetagroup)];
                 }
                 else
                 {
                     //sample new parameters for NPO
-                    for(m = 0; m < ntheta; m++) sdb[index2(l, m, nbetagroup)] = gsl_ran_flat(rand_gen, 0.0, maxsdb);
+                    for(m = 0; m < ntheta; m++) sdb[index2(l, m, nbetagroup)] = runif(0.0, maxsdb);
                 }
             }
         }
@@ -82,15 +77,15 @@ void moveexctoinc(int k, int *xassign, int *betastatusvar, int n, int nbetagroup
             //adjust for beta priors
             for(l = xassign[k]; l < xassign[k + 1]; l++)
             {
-                if(betastatus[l] == 0) accprop += log(gsl_ran_gaussian_pdf((beta[index2(l, 0, nbetagroup)] - mnb), sdb[index2(l, 0, nbetagroup)]));
+                if(betastatus[l] == 0) accprop += dnorm((beta[index2(l, 0, nbetagroup)] - mnb), 0.0, sdb[index2(l, 0, nbetagroup)], 1);
                 else
                 {
-                    for(m = 0; m < ntheta; m++) accprop += log(gsl_ran_gaussian_pdf((beta[index2(l, m, nbetagroup)] - mnb), sdb[index2(l, m, nbetagroup)]));
+                    for(m = 0; m < ntheta; m++) accprop += dnorm((beta[index2(l, m, nbetagroup)] - mnb), 0.0, sdb[index2(l, m, nbetagroup)], 1);
                     //adjust for theta priors conditional on beta
                     for(m = 1; m < ntheta; m++)
                     {
-                        accorig -= log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacondstore[m - 1], sdt));
-                        accprop -= log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacond[m - 1], sdt));
+                        accorig -= pnorm(theta[m - 1] - betacondstore[m - 1], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacondstore[m - 1], sdt));
+                        accprop -= pnorm(theta[m - 1] - betacond[m - 1], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[m - 1] - betacond[m - 1], sdt));
                     }
                 }
             }
@@ -108,10 +103,10 @@ void moveexctoinc(int k, int *xassign, int *betastatusvar, int n, int nbetagroup
             //adjust for proposals
             for(l = xassign[k]; l < xassign[k + 1]; l++)
             {
-                if(betastatus[l] == 0) accorig += log(gsl_ran_gaussian_pdf(beta[index2(l, 0, nbetagroup)], propsdb));
+                if(betastatus[l] == 0) accorig += dnorm(beta[index2(l, 0, nbetagroup)], 0.0, propsdb, 1);
                 else
                 {
-                    for(m = 0; m < ntheta; m++) accorig += log(gsl_ran_gaussian_pdf(beta[index2(l, m, nbetagroup)], propsdb));
+                    for(m = 0; m < ntheta; m++) accorig += dnorm(beta[index2(l, m, nbetagroup)], 0.0, propsdb, 1);
                 }
                 if(fixed == 0)
                 {
@@ -136,7 +131,7 @@ void moveexctoinc(int k, int *xassign, int *betastatusvar, int n, int nbetagroup
             //calculate acceptance
             acc = accprop - accorig;
             acc = exp(acc);
-            if(gsl_rng_uniform_pos(rand_gen) < acc) (*loglikeorig) = loglikeprop;
+            if(runif(0.0, 1.0) < acc) (*loglikeorig) = loglikeprop;
             else
             {
                 //if invalid proposal then reset everything to zero
@@ -180,6 +175,6 @@ void moveexctoinc(int k, int *xassign, int *betastatusvar, int n, int nbetagroup
         betastatusvar[k] = 0;
     }
     //free memory from the heap
-    free(betacondstore);
+    Free(betacondstore);
     return;
 }

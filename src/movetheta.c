@@ -1,15 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_cdf.h>
-
+#include <R.h>
+#include <Rmath.h>
 #include"functions.h"
 
 //function to move theta parameter
-void movetheta(int k, int n, int nbetagroup, int ntheta, double *beta, double *theta, double *psi, double *variables, double *betacond, double propsdt, double *loglikeorig, gsl_rng *rand_gen, double sdt)
+void movetheta(int k, int n, int nbetagroup, int ntheta, double *beta, double *theta, double *psi, double *variables, double *betacond, double propsdt, double *loglikeorig, double sdt)
 {
     double thetastore, loglikeprop;
     double accorig, accprop, acc, low, upp, low1, upp1;
@@ -35,7 +29,7 @@ void movetheta(int k, int n, int nbetagroup, int ntheta, double *beta, double *t
         }
     }
     //sample new parameter value
-    theta[k] = gsl_ran_flat(rand_gen, low, upp);
+    theta[k] = runif(low, upp);
     //set bounds for reverse move
     if(k == 0)
     {
@@ -66,24 +60,24 @@ void movetheta(int k, int n, int nbetagroup, int ntheta, double *beta, double *t
         //adjust for priors
         if(k == 0)
         {
-            accorig += log(gsl_ran_gaussian_pdf(thetastore, sdt));
-            accprop += log(gsl_ran_gaussian_pdf(theta[k], sdt));
-            accorig -= log(1.0 - gsl_cdf_gaussian_P(thetastore - betacond[k], sdt));
-            accprop -= log(1.0 - gsl_cdf_gaussian_P(theta[k] - betacond[k], sdt));
+            accorig += dnorm(thetastore, 0.0, sdt, 1);
+            accprop += dnorm(theta[k], 0.0, sdt, 1);
+            accorig -= pnorm(thetastore - betacond[k], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(thetastore - betacond[k], sdt));
+            accprop -= pnorm(theta[k] - betacond[k], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[k] - betacond[k], sdt));
         }
         else
         {
             if(k < (ntheta - 1))
             {
-                accorig += log(gsl_ran_gaussian_pdf(thetastore, sdt));
-                accprop += log(gsl_ran_gaussian_pdf(theta[k], sdt));
-                accorig -= log(1.0 - gsl_cdf_gaussian_P(thetastore - betacond[k], sdt));
-                accprop -= log(1.0 - gsl_cdf_gaussian_P(theta[k] - betacond[k], sdt));
+                accorig += dnorm(thetastore, 0.0, sdt, 1);
+                accprop += dnorm(theta[k], 0.0, sdt, 1);
+                accorig -= pnorm(thetastore - betacond[k], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(thetastore - betacond[k], sdt));
+                accprop -= pnorm(theta[k] - betacond[k], 0.0, sdt, 0, 1);//log(1.0 - gsl_cdf_gaussian_P(theta[k] - betacond[k], sdt));
             }
             else
             {
-                accorig += log(gsl_ran_gaussian_pdf(thetastore, sdt));
-                accprop += log(gsl_ran_gaussian_pdf(theta[k], sdt));
+                accorig += dnorm(thetastore, 0.0, sdt, 1);
+                accprop += dnorm(theta[k], 0.0, sdt, 1);
             }
         }
         //adjust for proposals
@@ -92,7 +86,7 @@ void movetheta(int k, int n, int nbetagroup, int ntheta, double *beta, double *t
         //calculate acceptance
         acc = accprop - accorig;
         acc = exp(acc);
-        if(gsl_rng_uniform_pos(rand_gen) < acc) (*loglikeorig) = loglikeprop;
+        if(runif(0.0, 1.0) < acc) (*loglikeorig) = loglikeprop;
         else theta[k] = thetastore;
     }
     else theta[k] = thetastore;

@@ -1,9 +1,13 @@
+# generic function
+bayesord <- function(formula, ...) UseMethod("bayesord")
+
 # set formula object for 'bayesord' method than incorporates a random intercept
-bayesord.formula <- function(formula, data = list(), nchains = 1, multi = F, model.type = c("PO", 
-    "NPO", "both"), var.select = TRUE, niter = 50000, nsavecoda = 1000, mnb = 0, 
+bayesord.default <- function(formula, data = list(), nchains = 1, multi = F, model.type = c("PO", 
+    "NPO", "both"), var.select = FALSE, niter = 50000, noutputsum = 1000, mnb = 0, 
     varb = 1000, maxsdb = 20, fixed = FALSE, vart = 1, mnpsi = 0, shvarp = 0.01, 
-    rtvarp = 0.01, propsdb = 1, propsdt = 1, propsdp = 1, propsdvarp = 1, runtraining = FALSE, 
-    nitertrain = 1000, start = NA, end = NA, thin = NA, ...) {
+    rtvarp = 0.01, propsdb = 1, proptaut = 1, proptaup = 1, proptauvarp = 1, runtraining = FALSE, nitertrain = 1000, start = NA, end = NA, thin = NA, ...) {
+    
+    #run some basic checks on arguments
     if (!is.call(formula)) 
         stop("Must have a valid formula")
     if (length(nchains) > 1 | !is.numeric(nchains)) 
@@ -14,8 +18,8 @@ bayesord.formula <- function(formula, data = list(), nchains = 1, multi = F, mod
         stop("'model.type' is incorrectly specified")
     if (length(niter) > 1 | !is.numeric(niter)) 
         stop("'niter' is not a numeric scalar")
-    if (length(nsavecoda) > 1 | !is.numeric(nsavecoda)) 
-        stop("'nsavecoda' is not a numeric scalar")
+    if (length(noutputsum) > 1 | !is.numeric(noutputsum)) 
+        stop("'noutputsum' is not a numeric scalar")
     if (length(mnb) > 1 | !is.numeric(mnb)) 
         stop("'mnb' is not a numeric scalar")
     if (length(varb) > 1 | !is.numeric(varb)) 
@@ -34,12 +38,12 @@ bayesord.formula <- function(formula, data = list(), nchains = 1, multi = F, mod
         stop("'rtvarp' is not a numeric scalar")
     if (length(propsdb) > 1 | !is.numeric(propsdb)) 
         stop("'propsdb' is not a numeric scalar")
-    if (length(propsdt) > 1 | !is.numeric(propsdt)) 
-        stop("'propsdt' is not a numeric scalar")
-    if (length(propsdp) > 1 | !is.numeric(propsdp)) 
-        stop("'propsdp' is not a numeric scalar")
-    if (length(propsdvarp) > 1 | !is.numeric(propsdvarp)) 
-        stop("'propsdvarp' is not a numeric scalar")
+    if (length(proptaut) > 1 | !is.numeric(proptaut)) 
+        stop("'proptaut' is not a numeric scalar")
+    if (length(proptaup) > 1 | !is.numeric(proptaup)) 
+        stop("'proptaup' is not a numeric scalar")
+    if (length(proptauvarp) > 1 | !is.numeric(proptauvarp)) 
+        stop("'proptauvarp' is not a numeric scalar")
     if (length(runtraining) > 1 | !is.logical(runtraining)) 
         stop("'runtraining' is not a logical value")
     if ((length(start) > 1 | !is.numeric(start)) & !is.na(start)) 
@@ -114,7 +118,6 @@ bayesord.formula <- function(formula, data = list(), nchains = 1, multi = F, mod
     
     # dealing with interaction effects
     if (intpresent == 1) {
-        # create intfactor matrix
         temp <- variables
         temp <- lapply(as.list(temp), function(x) strsplit(x, ":")[[1]])
         temp1 <- matrix(0, length(temp), length(temp))
@@ -129,25 +132,19 @@ bayesord.formula <- function(formula, data = list(), nchains = 1, multi = F, mod
                 }
             }
         }
-        write.table(temp1, "intfactor.txt", row.names = F, col.names = F, sep = "\t", 
-            quote = F)
+        intfactor <- unlist(temp1)
         temp <- sapply(temp, length) - 1
-        write.table(temp, "interaction.txt", row.names = F, col.names = F, sep = "\t", 
-            quote = F)
+        interaction <- unlist(temp)
         temp1 <- c((1:length(temp))[!duplicated(temp)] - 1, length(temp))
-        write.table(temp1, "intstart.txt", row.names = F, col.names = F, sep = "\t", 
-            quote = F)
+        intstart <- unlist(temp1)
         maxinteraction <- max(temp)
         rm(temp, temp1, temp2)
-    } else maxinteraction <- 0
-    
-    # now run ordinal regression model
-    
-    # load 'coda' library
-    require(coda)
-    
-    # set options for writing out data
-    options(scipen = 999)
+    } else {
+        intfactor <- NA
+        interaction <- NA
+        intstart <- NA
+        maxinteraction <- 0
+    }
     
     # extract data in correct format
     N <- length(y)
@@ -185,17 +182,13 @@ bayesord.formula <- function(formula, data = list(), nchains = 1, multi = F, mod
         dat1 <- dat1[sort.list(dat1[, ncol(dat1)]), ]
         psicount <- cumsum(tapply(dat1[, ncol(dat1)], factor(dat1[, ncol(dat1)], 
             levels = unique(dat1[, ncol(dat1)])), length))
-        write.table(psicount, "psicount.txt", row.names = F, col.names = F, sep = "\t", 
-            quote = F)
+    } else {
+        psicount <- NA
     }
-    # browser() compile C code
-    system("cp ../ccode/* .")
-    system("gcc -Wall main.c index.c loglikelihood.c loglikelihoodpsi.c moveNPO.c moveNPOtoPO.c movePO.c movePOtoNPO.c moveinctoexc.c moveexctoinc.c validitycheck.c movetheta.c movesdb.c -lgsl -lgslcblas -lm -O3 -o MCMCmulti")
-    system("rm *.c functions.h")
     
-    # now output data file
-    write.table(dat1, "data.dat", row.names = F, col.names = F, sep = "\t", quote = F)
-    
+    #collapse data down into vector
+    variables <- unlist(dat1)
+        
     # assign data file for use in model checking
     if (RE == 0) 
         id <- NA
@@ -215,39 +208,46 @@ bayesord.formula <- function(formula, data = list(), nchains = 1, multi = F, mod
         runtraining = runtraining, nitertrain = ifelse(runtraining == T, nitertrain, 
             NA)))))
     
-    # now write priors file
-    priors <- data.frame(n = N, niter = niter, nsavecoda = nsavecoda, nvariables = nvariables, 
-        nbeta = nbeta, nbetagroup = nbetagroup, ntheta = ntheta, mnb = mnb, varb = varb, 
-        maxsdb = maxsdb, fixed = ifelse(fixed == TRUE, 1, 0), vart = vart, propsdb = propsdb, 
-        propsdt = propsdt, mnpsi = mnpsi, shvarp = shvarp, rtvarp = rtvarp, propsdp = propsdp, 
-        propsdvarp = propsdvarp, npsi = npsi, RE = RE, model.type = model.type, varselect = ifelse(var.select == 
-            TRUE, 1, 0), maxinteraction = maxinteraction, runtraining = ifelse(runtraining == 
-            TRUE, 1, 0), nitertrain = nitertrain)
-    priors <- data.frame(t(as.matrix(priors)), colnames(priors))
-    write.table(priors, "priors.txt", row.names = F, col.names = F, quote = F, sep = "\t")
+    # now set up input vectors
+    intinputs <- c(N, niter, noutputsum, nvariables, nbeta, nbetagroup, ntheta, 
+        ifelse(fixed == TRUE, 1, 0), npsi, RE, model.type, ifelse(var.select == TRUE, 1, 0), 
+        maxinteraction, ifelse(runtraining == TRUE, 1, 0), nitertrain)
+    doubleinputs <- c(mnb, varb, vart, mnpsi, shvarp, rtvarp, propsdb, proptaut, proptaup, 
+        proptauvarp, maxsdb)
     
-    # write assignment file
-    write.table(xassign, "xassign.txt", row.names = F, col.names = F, quote = F, 
-        sep = "\t")
+    # set assignment data
+    xassign <- unlist(xassign)
     
-    if (multi == T) {
-        library(multicore)
-        # run model
-        mclapply(as.list(1:nchains), function(x) {
-            seed <- floor(2147483647 * runif(1, 0, 1))
-            temp <- paste("./MCMCmulti ", x, " ", seed, sep = "")  #,' > output',x,'.txt',sep='')
-            system(temp)
-        }, mc.cores = nchains, mc.set.seed = T)
+    if (multi) {
+        if(require(multicore)) {
+            # check number of available cores
+            mc.cores <- multicore:::detectCores()
+            mc.cores <- ifelse(mc.cores > nchains, nchains, mc.cores)
+            # run model
+            posterior <- mclapply(as.list(1:nchains), function(x) {
+                #append chain and print indicator to inputs
+                intinputs1 <- c(x, intinputs, ifelse(x == 1, 1, 0), 1)
+                #run MCMC code
+                .Call("bayesord", intinputs1, doubleinputs, variables, xassign, intfactor,
+                    interaction, intstart, psicount, package = "BayesOrd")
+            }, mc.cores = mc.cores)
+        } else {
+            stop("Parallel processing requires multicore library. Please install or set multi = FALSE")
+        }
     } else {
+        posterior <- list(NULL)
         for (i in 1:nchains) {
-            seed <- floor(2147483647 * runif(1, 0, 1))
-            temp <- paste("./MCMCmulti ", i, " ", seed, sep = "")  #' > output',i,'.txt',sep='')
-            system(temp)
+            #append chain and print indicator to inputs
+            intinputs1 <- c(i, intinputs, ifelse(i == 1, 1, 0), 0)
+            #run MCMC code
+            posterior[[i]] <- .Call("bayesord", intinputs1, doubleinputs, variables, xassign,
+                intfactor, interaction, intstart, psicount, package = "BayesOrd")
         }
     }
-    print("Finished MCMC run")
+    cat("Finished MCMC run\n")
     
-    options(scipen = 5)
+    #convert posterior vectors into matrices
+    posterior <- lapply(posterior, function(x, niter) matrix(x, nrow = niter), niter = niter)
     
     # read in and process data
     beta <- list(NULL)
@@ -259,7 +259,7 @@ bayesord.formula <- function(formula, data = list(), nchains = 1, multi = F, mod
     loglikelihood <- list(NULL)
     for (i in 1:nchains) {
         # read in table of posterior samples
-        beta[[i]] <- read.table(paste("codaMCMC", i, ".txt", sep = ""), header = T)
+        beta[[i]] <- posterior[[i]]
         theta[[i]] <- as.mcmc(beta[[i]][, (nbeta + 1):(nbeta + ntheta)])
         if (model.type == 2 | var.select == TRUE) {
             status[[i]] <- beta[[i]][, (nbeta + ntheta + 1):(nbeta + ntheta + nbetagroup)]
@@ -319,15 +319,10 @@ bayesord.formula <- function(formula, data = list(), nchains = 1, multi = F, mod
         varp <- mcmc.list(varp)
         psi <- mcmc.list(psi)
     }
+    #produce output
     ans <- list(beta = mcmc.list(beta), theta = mcmc.list(theta), status = status, 
         psi = psi, sdb = sdb, varp = varp, loglikelihood = mcmc.list(loglikelihood), 
         info = info, model.dat = dat1, var.info = var.info)
-    # remove text files
-    system("rm data.dat priors.txt xassign.txt codaMCMC* MCMCmulti")
-    if (RE == 1) 
-        system("rm psicount.txt")
-    if (intpresent == 1) 
-        system("rm interaction.txt intfactor.txt intstart.txt")
     # set class
     class(ans) <- "bayesord"
     # thin if necessary
