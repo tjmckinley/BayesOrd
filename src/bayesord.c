@@ -24,6 +24,9 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
         Rprintf("Input information of incorrect length\n");
         return R_NilValue;
     }
+    
+    //get RNG state
+    GetRNGstate();
 
     //set variables from inputs
     intinputs = PROTECT(coerceVector(intinputs, INTSXP));
@@ -124,16 +127,16 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
     }
 
     //visual check of data
-    if(printall == 1)
-    {
-        Rprintf("\n#### Visual check of data ####\n");
-        for(i = 0; i < 5; i++)
-        {
-            for(j = 0; j < (nbetagroup + 2); j++) Rprintf("%f\t", variables[index2(i, j, n)]);
-            if(RE == 1) Rprintf("%f", variables[index2(i, j, n)]);
-	        Rprintf("\n");
-	    }
-	}
+/*    if(printall == 1)*/
+/*    {*/
+/*        Rprintf("\n#### Visual check of data ####\n");*/
+/*        for(i = 0; i < 5; i++)*/
+/*        {*/
+/*            for(j = 0; j < (nbetagroup + 2); j++) Rprintf("%f\t", variables[index2(i, j, n)]);*/
+/*            if(RE == 1) Rprintf("%f", variables[index2(i, j, n)]);*/
+/*	        Rprintf("\n");*/
+/*	    }*/
+/*	}*/
 
     //set number of parameters
     int npars = nbeta + ntheta + npsi + 1 + nbetagroup;
@@ -176,6 +179,7 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
         if(minvar[i] == maxvar[i])
         {
             Rprintf("No variation in %dth variable\n", i);
+            UNPROTECT(9);
             return R_NilValue;
         }
     }
@@ -198,25 +202,25 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
     int *betastatusvar = (int *) Calloc(nvariables, int);
     for(i = 0; i < nvariables; i++) betastatusvar[i] = 1;
     
-    if(maxinteraction > 0)
-    {
-        //visual check of data inputs
-        if(printall == 1)
-        {
-            Rprintf("intfactor:\n");
-            for(i = 0; i < nvariables; i++)
-            {
-                for(j = 0; j < nvariables; j++) Rprintf("%d ", intfactor[index2(i, j, nvariables)]);
-                Rprintf("\n");
-            }
-            Rprintf("\ninteraction:\n");
-            for(i = 0; i < nvariables; i++) Rprintf("%d ", interaction[i]);
-            Rprintf("\n");
-            Rprintf("\nintstart:\n");
-            for(i = 0; i < (maxinteraction + 2); i++) Rprintf("%d ", intstart[i]);
-            Rprintf("\n");
-        }
-    }
+/*    if(maxinteraction > 0)*/
+/*    {*/
+/*        //visual check of data inputs*/
+/*        if(printall == 1)*/
+/*        {*/
+/*            Rprintf("intfactor:\n");*/
+/*            for(i = 0; i < nvariables; i++)*/
+/*            {*/
+/*                for(j = 0; j < nvariables; j++) Rprintf("%d ", intfactor[index2(i, j, nvariables)]);*/
+/*                Rprintf("\n");*/
+/*            }*/
+/*            Rprintf("\ninteraction:\n");*/
+/*            for(i = 0; i < nvariables; i++) Rprintf("%d ", interaction[i]);*/
+/*            Rprintf("\n");*/
+/*            Rprintf("\nintstart:\n");*/
+/*            for(i = 0; i < (maxinteraction + 2); i++) Rprintf("%d ", intstart[i]);*/
+/*            Rprintf("\n");*/
+/*        }*/
+/*    }*/
 
     //set up loglikelihood stuff
     double loglikeorig, loglikeprop, accorig, accprop, acc;
@@ -329,30 +333,38 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
         m++;
     }
 
+    if(chain == 1) Rprintf("\n");
     if(m == 1000) {
         if(multi == 1 && chain > 1) Rprintf("Can't initialise: chain %d!\n", chain);
-        else Rprintf("\nCan't initialise: chain %d!\n", chain);
+        else Rprintf("Can't initialise: chain %d!\n", chain);
+        UNPROTECT(9);
         return R_NilValue;
     }
     if(multi == 1 && chain > 1) Rprintf("System initialised OK: chain %d!\n", chain);
-    else Rprintf("\nSystem initialised OK: chain %d!\n", chain);
+    else Rprintf("System initialised OK: chain %d!\n", chain);
 
     //set up and read in cumulative count vector for efficient psi updates
 /*    if(printall == 1) Rprintf("RE = %d\n", RE);*/
     if(RE == 1)
     {
-        if(printall == 1)
-        {
-            //visual check
-            for(j = 0; j < 5; j++) Rprintf("psicount[%d]=%d\n", j, psicount[j]);
-            Rprintf("...\n");
-            for(j = npsi - 5; j < (npsi + 1); j++) Rprintf("psicount[%d]=%d\n", j, psicount[j]);
-            Rprintf("\n");
-        }
+/*        if(printall == 1)*/
+/*        {*/
+/*            Rprintf("\n");*/
+/*            //visual check*/
+/*            for(j = 0; j < 5; j++) Rprintf("psicount[%d]=%d\n", j, psicount[j]);*/
+/*            Rprintf("...\n");*/
+/*            for(j = npsi - 5; j < npsi; j++) Rprintf("psicount[%d]=%d\n", j, psicount[j]);*/
+/*            Rprintf("\n");*/
+/*        }*/
     }
+    else Rprintf("\n");
 
     //function to check validity of proposals
-    if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1) return R_NilValue;
+    if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1)
+    {
+        UNPROTECT(9);
+        return R_NilValue;
+    }
 
     double pinteraction;
     //set move probabilities (0: keep, 1: add/remove)
@@ -405,7 +417,11 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
             ran_shuffle_int(betashuffletheta, ntheta);
             for(m = 0; m < ntheta; m++) movetheta(betashuffletheta[m], n, nbetagroup, ntheta, beta, theta, psi, variables, betacond, propsdt, &loglikeorig, sdt);
             //now check validity conditions
-            if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1) return R_NilValue;
+            if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1)
+            {
+                UNPROTECT(9);
+                return R_NilValue;
+            }
             //move SD for beta parameter
             if(fixed == 0)
             {
@@ -419,7 +435,7 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
             }
         }
         if(movetype == 1) for(j = 0; j < nbetagroup; j++) betastatus[j] = 1;
-        Rprintf("Finished training run, restarting chains...\n");
+        Rprintf("Finished training run, restarting chain %d...\n", chain);
     }
 
     //save posterior for initial samples
@@ -487,7 +503,11 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
                             moveexctoinc(k, xassign, betastatusvar, n, nbetagroup, ntheta, beta, theta, psi, variables, betastatus, betacond, minvar, maxvar, propsdb, &loglikeorig, mnb, sdb, sdt, pvecvarmove, pzero, maxsdb, fixed);
                         }
                         //now check validity conditions
-                        if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1) return R_NilValue;
+                        if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1)
+                        {
+                            UNPROTECT(9);
+                            return R_NilValue;
+                        }
                     }
                     else
                     {
@@ -503,7 +523,11 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
                             moveexctoinc(k, xassign, betastatusvar, n, nbetagroup, ntheta, beta, theta, psi, variables, betastatus, betacond, minvar, maxvar, propsdb, &loglikeorig, mnb, sdb, sdt, pvecvar, pzero, maxsdb, fixed);
                         }
                         //now check validity conditions
-                        if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1) return R_NilValue;
+                        if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1)
+                        {
+                            UNPROTECT(9);
+                            return R_NilValue;
+                        }
                     }
                 }
                 else
@@ -529,7 +553,11 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
                             moveinctoexc(k, xassign, betastatusvar, n, nbetagroup, ntheta, beta, theta, psi, variables, betastatus, betacond, minvar, maxvar, propsdb, &loglikeorig, mnb, sdb, sdt, pvecvarmove, pzero, maxsdb, fixed);
                         }
                         //now check validity conditions
-                        if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1) return R_NilValue;
+                        if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1)
+                        {
+                            UNPROTECT(9);
+                            return R_NilValue;
+                        }
                     }
                     else
                     {
@@ -541,7 +569,11 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
                             moveinctoexc(k, xassign, betastatusvar, n, nbetagroup, ntheta, beta, theta, psi, variables, betastatus, betacond, minvar, maxvar, propsdb, &loglikeorig, mnb, sdb, sdt, pvecvar, pzero, maxsdb, fixed);
                         }
                         //now check validity conditions
-                        if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1) return R_NilValue;
+                        if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1)
+                        {
+                            UNPROTECT(9);
+                            return R_NilValue;
+                        }
                     }
                 }
             }
@@ -569,14 +601,22 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
                     else moveNPOtoPO(k, n, nbetagroup, ntheta, beta, theta, psi, variables, betastatus, betacond, minvar, maxvar, propsdb, &loglikeorig, mnb, sdb, sdt, maxsdb, fixed);
                 }
                 //now check validity conditions
-                if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1) return R_NilValue;
+                if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1)
+                {
+                    UNPROTECT(9);
+                    return R_NilValue;
+                }
             }
         }
         //update theta terms in random order
         ran_shuffle_int(betashuffletheta, ntheta);
         for(m = 0; m < ntheta; m++) movetheta(betashuffletheta[m], n, nbetagroup, ntheta, beta, theta, psi, variables, betacond, propsdt, &loglikeorig, sdt);
         //now check validity conditions
-        if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1) return R_NilValue;
+        if(validitycheck(ntheta, nbetagroup, betastatus, beta, theta, betacond, minvar, maxvar) == 1)
+        {
+            UNPROTECT(9);
+            return R_NilValue;
+        }
 
         //move SD for beta parameter
         if(fixed == 0)
@@ -690,6 +730,9 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
     Free(betastatus); Free(betastatusvar); Free(sdb);
     
     UNPROTECT(9);
+    
+    //export RNG state
+    PutRNGstate();
     
     // terminate the program:
     return Rposterior;

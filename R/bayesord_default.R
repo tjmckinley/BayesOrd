@@ -79,7 +79,7 @@ bayesord.default <- function(formula, data = list(), nchains = 1, multi = F, mod
     # condense data into succinct form for model
     data <- data[, match(attr(mf, "names"), colnames(data))]
     if (!is.null(RE)) 
-        data$RE <- factor(rand.int.vec)
+        data$RE <- factor(rand.int.vec[, 1])
     # now aggregate data
     data <- aggregate(rep(1, nrow(data)), data, table)
     data[, ncol(data)] <- as.numeric(data[, ncol(data)])
@@ -182,6 +182,7 @@ bayesord.default <- function(formula, data = list(), nchains = 1, multi = F, mod
         dat1 <- dat1[sort.list(dat1[, ncol(dat1)]), ]
         psicount <- cumsum(tapply(dat1[, ncol(dat1)], factor(dat1[, ncol(dat1)], 
             levels = unique(dat1[, ncol(dat1)])), length))
+        psicount <- c(0, psicount)
     } else {
         psicount <- NA
     }
