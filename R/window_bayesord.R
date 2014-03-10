@@ -6,7 +6,7 @@ window.bayesord <- function(x, start = NA, end = NA, thin = NA, chains = NA, ...
         x$beta <- x$beta[chains]
         x$theta <- x$theta[chains]
         x$status <- x$status[chains]
-        x$status <- x$sdb[chains]
+        x$sdb <- x$sdb[chains]
         if (!is.na(x$psi[1])) {
             x$psi <- x$psi[chains]
             x$varp <- x$varp[chains]
