@@ -5,13 +5,15 @@
 This function plots summaries of the MCMC runs resulting from a call to \code{\link{bayesord}}. It uses the \code{coda} package to produce trace and autocorrelation plots to help visually assess convergence and mixing of the chain(s).
 }
 \usage{
-\method{plot}{bayesord}(x, which = c("trace", "AC"), type = c("reg", "cluster", "all"), scale = c("logOR", "OR"), ask = F, bystatus = F, ...)
+\method{plot}{bayesord}(x, which = c("conv", "AC"), type = c("reg", "cluster", "all"), scale = c("logOR", "OR"), trace = T, density = T, ask = F, bystatus = F, ...)
 }
 \arguments{
   \item{x}{an object of class "bayesord"}
-  \item{which}{a character specifying whether to produce trace plots or autocorrelation plots.}
+  \item{which}{a character specifying whether to produce convergence (trace and density) plots or autocorrelation plots.}
   \item{type}{a character specifying whether to plot the regression parameters, the clustering parameters, or all of them.}
   \item{scale}{a character specifying whether to plot regression parameters as log(odds ratios) or odds-ratios.}
+  \item{trace}{a logical specifying whether to produce trace plots if \code{which = "conv"}.}
+  \item{density}{a logical specifying whether to produce density plots if \code{which = "conv"}.}
   \item{ask}{a logical specifying whether to ask before producing next set of plots.}
   \item{bystatus}{a logical specifying whether we want to produce trace plots stratified by status. See 'Details' section for more information.}
   \item{\dots}{not used here.}

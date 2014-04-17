@@ -1,16 +1,23 @@
 # plot function for 'bayesord' x
-plot.bayesord <- function(x, which = c("trace", "AC"), type = c("reg", "cluster", 
-    "all"), scale = c("logOR", "OR"), ask = F, bystatus = F, ...) {
+plot.bayesord <- function(x, which = c("conv", "AC"), type = c("reg", "cluster", 
+    "all"), scale = c("logOR", "OR"), trace = T, density = T, ask = F, bystatus = F, ...) {
     if (class(x) != "bayesord") 
         stop("'x' is not a 'bayesord' x")
-    if (which[1] != "trace" & which[1] != "AC") 
+    if (which[1] != "conv" & which[1] != "AC") 
         stop("'which' is incorrect")
     if (type[1] != "reg" & type[1] != "cluster" & type[1] != "all") 
         stop("'type' is incorrect")
     if (scale[1] != "logOR" & scale[1] != "OR") 
         stop("'scale' is incorrect")
+    if (!is.logical(trace[1]) | length(trace) > 1) 
+        stop("'trace' is not a logical value")
+    if (!is.logical(density[1]) | length(density) > 1) 
+        stop("'density' is not a logical value")
     if (!is.logical(bystatus[1]) | length(bystatus) > 1) 
         stop("'bystatus' is not a logical value")
+        
+    if (which[1] == "conv" & (trace[1] == F & density[1] == F))
+        stop("Either 'trace' or 'density' must be TRUE if 'which = conv'")
     
     reg <- ifelse(type[1] == "reg" | type[1] == "all", 1, 0)
     cutp <- ifelse(type[1] == "reg" | type[1] == "all", 1, 0)
@@ -20,11 +27,11 @@ plot.bayesord <- function(x, which = c("trace", "AC"), type = c("reg", "cluster"
     sdb <- ifelse(type[1] == "reg" | type[1] == "all", 1, 0)
     loglikelihood <- ifelse(type[1] == "reg" | type[1] == "all", 1, 0)
     
-    trace <- ifelse(which[1] == "trace", 1, 0)
+    conv <- ifelse(which[1] == "conv", 1, 0)
     CI <- ifelse(which[1] == "CI", 1, 0)
     AC <- ifelse(which[1] == "AC", 1, 0)
     
-    if (trace == 1 | AC == 1) {
+    if (conv == 1 | AC == 1) {
         output <- list(NULL)
         ind <- 1
         if (reg == 1) {
@@ -84,9 +91,18 @@ plot.bayesord <- function(x, which = c("trace", "AC"), type = c("reg", "cluster"
                   output[[i]] <- temp2
                 }
                 # set up plotting parameters
-                maxp <- length(output) * 2
-                if (maxp >= 4) 
-                  mfrow1 <- c(4, 2) else mfrow1 <- c(maxp, 2)
+                if(trace == T & density == T)
+                {
+                    maxp <- length(output) * 2
+                    if (maxp >= 4) 
+                      mfrow1 <- c(4, 2) else mfrow1 <- c(maxp, 2)
+                }
+                else
+                {
+                    maxp <- length(output)
+                    if(maxp >= 4)
+                        mfrow1 <- c(4, 1) else mfrow1 <- c(maxp, 1)
+                }
                 cols1 <- c("black", "red", "blue", "green", "yellow", "purple")
                 par(mfrow = mfrow1)
                 # produce plots
@@ -97,24 +113,36 @@ plot.bayesord <- function(x, which = c("trace", "AC"), type = c("reg", "cluster"
                     temp <- output[[i]][[k]]
                     if (nrow(temp) > 1) {
                       temp <- cbind(1:nrow(temp), temp)
-                      plot(NULL, xlim = range(temp[, 1]), ylim = range(temp[, 2]), 
-                        type = "l", main = paste(variables[i], ": ", ifelse(k == 
-                          1, "PO", "NPO"), sep = ""), xlab = "Index", ylab = "Value")
-                      for (j in unique(temp[, 3])) lines(temp[temp[, 3] == j, 1], 
-                        temp[temp[, 3] == j, 2], col = cols1[j])
-                      # plot density
-                      plot(density(temp[, 2]), main = paste(variables[i], ": ", ifelse(k == 
-                        1, "PO", ifelse(k == 2, "NPO", "Excluded")), sep = ""), xlab = "Value", 
-                        ylab = "Density")
+                      if(trace == T)
+                      {
+                          plot(NULL, xlim = range(temp[, 1]), ylim = range(temp[, 2]), 
+                            type = "l", main = paste(variables[i], ": ", ifelse(k == 
+                              1, "PO", "NPO"), sep = ""), xlab = "Index", ylab = "Value")
+                          for (j in unique(temp[, 3])) lines(temp[temp[, 3] == j, 1], 
+                            temp[temp[, 3] == j, 2], col = cols1[j])
+                      }
+                      if(density == T)
+                      {
+                          # plot density
+                          plot(density(temp[, 2]), main = paste(variables[i], ": ", ifelse(k == 
+                            1, "PO", ifelse(k == 2, "NPO", "Excluded")), sep = ""), xlab = "Value", 
+                            ylab = "Density")
+                      }
                     } else {
-                      plot(0, 0, xaxt = "n", yaxt = "n", xlab = "", ylab = "", col = "white", 
-                        main = paste(variables[i], ": ", ifelse(k == 1, "PO", "NPO"), 
-                          sep = ""))
-                      text(0, 0, "None")
-                      plot(0, 0, xaxt = "n", yaxt = "n", xlab = "", ylab = "", col = "white", 
-                        main = paste(variables[i], ": ", ifelse(k == 1, "PO", "NPO"), 
-                          sep = ""))
-                      text(0, 0, "None")
+                      if(trace == T)
+                      {
+                          plot(0, 0, xaxt = "n", yaxt = "n", xlab = "", ylab = "", col = "white", 
+                            main = paste(variables[i], ": ", ifelse(k == 1, "PO", "NPO"), 
+                              sep = ""))
+                          text(0, 0, "None")
+                      }
+                      if(density == T)
+                      {
+                          plot(0, 0, xaxt = "n", yaxt = "n", xlab = "", ylab = "", col = "white", 
+                            main = paste(variables[i], ": ", ifelse(k == 1, "PO", "NPO"), 
+                              sep = ""))
+                          text(0, 0, "None")
+                      }
                     }
                     l <- l + 1
                     if (ask == T) {
@@ -168,7 +196,7 @@ plot.bayesord <- function(x, which = c("trace", "AC"), type = c("reg", "cluster"
                 ind <- ind + 1
             } else {
                 if (type != "all") 
-                  stop("Can't plot as no clusterom intercepts in this model")
+                  stop("Can't plot as no cluster intercepts in this model")
             }
         }
         if (loglikelihood == 1) {
@@ -187,8 +215,8 @@ plot.bayesord <- function(x, which = c("trace", "AC"), type = c("reg", "cluster"
         for (i in 1:length(output[[1]])) output1[[i]] <- as.mcmc(do.call("cbind", 
             lapply(output, function(y, i) y[[i]], i = i)))
         output1 <- as.mcmc.list(output1)
-        if (trace == 1) 
-            plot(output1, ask = ask)
+        if (conv == 1) 
+            plot(output1, trace = trace, density = density, ask = ask)
         if (AC == 1) 
             autocorr.plot(output1, ask = ask)
     }
