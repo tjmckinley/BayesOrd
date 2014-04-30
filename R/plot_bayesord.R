@@ -134,14 +134,14 @@ plot.bayesord <- function(x, which = c("conv", "AC"), type = c("reg", "cluster",
                           plot(0, 0, xaxt = "n", yaxt = "n", xlab = "", ylab = "", col = "white", 
                             main = paste(variables[i], ": ", ifelse(k == 1, "PO", "NPO"), 
                               sep = ""))
-                          text(0, 0, "None")
+                          text(0, 0, "<= 1 Sample")
                       }
                       if(density == T)
                       {
                           plot(0, 0, xaxt = "n", yaxt = "n", xlab = "", ylab = "", col = "white", 
                             main = paste(variables[i], ": ", ifelse(k == 1, "PO", "NPO"), 
                               sep = ""))
-                          text(0, 0, "None")
+                          text(0, 0, "<= 1 Sample")
                       }
                     }
                     l <- l + 1
