@@ -29,7 +29,7 @@ Produces a list with elements:
 \item{topmodels}{an integer recording the number of top models to print.}
 \item{digits}{a positive integer controlling the number of digits used in rounding the output.}
 }
-\references{McKinley et al., (2014), in review.}
+\references{McKinley et al., (2014), to appear in Bayesian Analysis.}
 \author{TJ McKinley}
 \seealso{\code{\link{bayesord}}, \code{\link{plot.bayesord}}}
 \examples{

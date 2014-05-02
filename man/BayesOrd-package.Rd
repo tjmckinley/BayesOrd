@@ -6,7 +6,7 @@
 MCMC routines for model fitting and Bayesian model choice for ordinal regression models
 }
 \description{
-Package implements routines described in McKinley et al. (2014), in review, for fitting ordinal regression models in a Bayesian framework using Markov chain MOnte Carlo methods. The package can be used to fit proportional odds (PO) and non-proportional odds (NPO) models, and can also be used to perform Bayesian model selection to choose between PO or NPO structures for each variable. In addition the package will perform variable selection based on posterior probabilities of association.
+Package implements routines described in McKinley et al. (2014), for fitting ordinal regression models in a Bayesian framework using Markov chain MOnte Carlo methods. The package can be used to fit proportional odds (PO) and non-proportional odds (NPO) models, and can also be used to perform Bayesian model selection to choose between PO or NPO structures for each variable. In addition the package will perform variable selection based on posterior probabilities of association.
 }
 \details{
 \tabular{ll}{
@@ -24,5 +24,5 @@ TJ McKinley
 
 Maintainer: TJ McKinley <tjm44@cam.ac.uk>
 }
-\references{McKinley et al., (2014), in review.}
+\references{McKinley et al., (2014), to appear in Bayesian Analysis.}
 \seealso{\code{\link{bayesord}}}

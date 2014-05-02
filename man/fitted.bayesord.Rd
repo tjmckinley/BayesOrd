@@ -37,7 +37,7 @@ Produces a list with elements:
 \item{model.dat}{a data frame where each row corresponds to a unique configuration of data points (used for improving efficiency).}
 \item{var.info}{a list, containing information relating to the original data. This is used to produce the marginal plots.}
 }
-\references{McKinley et al., (2014), in review.}
+\references{McKinley et al., (2014), to appear in Bayesian Analysis.}
 \author{TJ McKinley}
 \seealso{\code{\link{bayesord}}}
 \examples{

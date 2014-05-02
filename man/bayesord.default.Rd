@@ -8,7 +8,7 @@ Fits proportional odds (PO) and non-proportional odds
 ordinal regression models using MCMC. The function also provides a means to perform Bayesian model selection based on posterior probabilities of association, that allows the model to select between PO and NPO
 structures for each variable. In addition variable selection can be incorporated. The underlying code
 is based on reversible-jump Markov chain Monte Carlo (MCMC), and details can be found in McKinley et al.,
-(2014), in review.
+(2014).
 }
 \usage{
 bayesord(formula, ...)
@@ -54,7 +54,7 @@ bayesord(formula, ...)
   \item{\dots}{not used here.}
 }
 \details{
-Full details of the methodology is provided in McKinley et al., (2014), in review. 
+Full details of the methodology is provided in McKinley et al. (2014). 
 
 In order for the \code{multi} argument to be used, the \code{multicore} package must be installed. This simply runs each chain in parallel, so the number of cores is set to the number of chains, or the maximum number of cores, whichever is smaller.
 
@@ -75,7 +75,7 @@ Produces a list with elements:
 \item{call}{the original model call.}
 \item{formula}{a formula object containing a symbolic description of the model.}
 }
-\references{McKinley et al, (2014), in review.}
+\references{McKinley et al, (2014), to appear in Bayesian Analysis.}
 \author{TJ McKinley}
 \seealso{\code{\link{summary.bayesord}}, \code{\link{plot.bayesord}}, \code{\link{fitted.bayesord}}}
 \examples{

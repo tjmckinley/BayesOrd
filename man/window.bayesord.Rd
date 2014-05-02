@@ -17,7 +17,7 @@
 \value{
 Returns a "bayesord" object according to subsetting criteria.
 }
-\references{McKinley et al., (2014), in review.}
+\references{McKinley et al., (2014), to appear in Bayesian Analysis.}
 \author{TJ McKinley}
 \seealso{\code{\link{bayesord}}}
 \examples{
