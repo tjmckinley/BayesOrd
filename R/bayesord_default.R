@@ -76,6 +76,12 @@ bayesord.default <- function(formula, data = list(), nchains = 1, multi = F, mod
             j])
     }
     
+    # expand formula in case user uses the dot "." identifier
+    tempform <- as.character(form)
+    form <- paste(tempform[2], tempform[1], paste(attr(terms.formula(form, data = mf), "term.labels"), collapse = " + "))
+    form <- formula(form)
+    rm(tempform)
+    
     # condense data into succinct form for model
     data <- data[, match(attr(mf, "names"), colnames(data))]
     if (!is.null(RE)) 
