@@ -2,12 +2,13 @@ Package: BayesOrd
 Type: Package
 Title: Bayesian methods for fitting proportional and non-proportional odds
     ordinal regression models
-Version: 1.0
-Date: 2014-01-28
+Version: 1.1
+Date: 2017-11-17
 Author: TJ McKinley
-Maintainer: TJ McKinley <tjm44@cam.ac.uk>
+Maintainer: TJ McKinley <t.mckinley@exeter.ac.uk>
 Description: This package provides code to run a set of Bayesian ordinal
-    regression algorithms as described in McKinley et al. (2014), to appear in Bayesian Analysis.
+    regression algorithms as described in McKinley et al. (2015), 
+    Bayesian Analysis, 10 (1), P1--30.
 Imports:
     stats,
     coda,
