@@ -113,7 +113,7 @@ bayesord.default <- function(formula, data = list(), nchains = 1, multi = F, mod
     xassign <- c(0, xassign)  #add nbetagroup to end of this later
     
     # remove intercept from design matrix
-    x <- x[, -1]
+    x <- x[, -1, drop = FALSE]
     
     # extract variable information for use in marginal posterior plotting
     var.info <- as.character(attr(attr(mf, "terms"), "variables"))[-1]
