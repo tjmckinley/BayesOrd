@@ -1,6 +1,6 @@
 # plot function for 'bayesord' x
 plot.bayesord <- function(x, which = c("conv", "AC"), type = c("reg", "cluster", 
-    "all"), scale = c("logOR", "OR"), trace = T, density = T, ask = F, bystatus = F, ...) {
+    "all"), scale = c("logOR", "OR"), trace = T, density = T, ask = T, bystatus = F, ...) {
     if (class(x) != "bayesord") 
         stop("'x' is not a 'bayesord' x")
     if (which[1] != "conv" & which[1] != "AC") 

@@ -5,7 +5,7 @@
 This function plots summaries of the MCMC runs resulting from a call to \code{\link{bayesord}}. It uses the \code{coda} package to produce trace and autocorrelation plots to help visually assess convergence and mixing of the chain(s).
 }
 \usage{
-\method{plot}{bayesord}(x, which = c("conv", "AC"), type = c("reg", "cluster", "all"), scale = c("logOR", "OR"), trace = T, density = T, ask = F, bystatus = F, ...)
+\method{plot}{bayesord}(x, which = c("conv", "AC"), type = c("reg", "cluster", "all"), scale = c("logOR", "OR"), trace = T, density = T, ask = T, bystatus = F, ...)
 }
 \arguments{
   \item{x}{an object of class "bayesord"}
