@@ -269,7 +269,9 @@ bayesord.default <- function(formula, data = list(), nchains = 1, multi = F, mod
     for (i in 1:nchains) {
         # read in table of posterior samples
         beta[[i]] <- posterior[[i]]
-        theta[[i]] <- as.mcmc(beta[[i]][, (nbeta + 1):(nbeta + ntheta)])
+        theta[[i]] <- beta[[i]][, (nbeta + 1):(nbeta + ntheta)]
+        colnames(theta[[i]]) <- paste0("theta", 1:ncol(theta[[i]]))
+        theta[[i]] <- as.mcmc(theta[[i]])
         if (model.type == 2 | var.select == TRUE) {
             status[[i]] <- beta[[i]][, (nbeta + ntheta + 1):(nbeta + ntheta + nbetagroup)]
             if (is.null(ncol(status[[i]]))) 
