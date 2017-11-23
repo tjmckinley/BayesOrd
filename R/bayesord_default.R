@@ -86,6 +86,8 @@ bayesord.default <- function(formula, data = list(), nchains = 1, multi = F, mod
     data <- data[, match(attr(mf, "names"), colnames(data))]
     if (!is.null(RE)) 
         data$RE <- factor(rand.int.vec[, 1])
+    # extract number of data points (for printing)
+    Ndata <- nrow(data)
     # now aggregate data
     data <- aggregate(rep(1, nrow(data)), data, table)
     data[, ncol(data)] <- as.numeric(data[, ncol(data)])
@@ -218,7 +220,7 @@ bayesord.default <- function(formula, data = list(), nchains = 1, multi = F, mod
     # now set up input vectors
     intinputs <- c(N, niter, noutputsum, nvariables, nbeta, nbetagroup, ntheta, 
         ifelse(fixed == TRUE, 1, 0), npsi, RE, model.type, ifelse(var.select == TRUE, 1, 0), 
-        maxinteraction, ifelse(runtraining == TRUE, 1, 0), nitertrain)
+        maxinteraction, ifelse(runtraining == TRUE, 1, 0), nitertrain, Ndata)
     doubleinputs <- c(mnb, varb, vart, mnpsi, shvarp, rtvarp, propsdb, proptaut, proptaup, 
         proptauvarp, maxsdb)
     

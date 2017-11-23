@@ -15,7 +15,7 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
 
     //import initial conditions and priors into function
     //and set up parameters to be estimated
-    int chain, n, niter, nvariables, nbeta, nbetagroup, ntheta, noutputsum, npsi, RE, movetype, varselect, fixed, maxinteraction, runtraining, nitertrain, printall, multi;
+    int chain, n, niter, nvariables, nbeta, nbetagroup, ntheta, noutputsum, npsi, RE, movetype, varselect, fixed, maxinteraction, runtraining, nitertrain, ndata, printall, multi;
     double mnb, varb, maxsdb, vart, propsdb, propsdt, mnpsi, shvarp, rtvarp, propsdp, propsdvarp;
     
     //check input lengths
@@ -48,8 +48,9 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
     maxinteraction = INTEGER(intinputs)[13];
     runtraining = INTEGER(intinputs)[14];
     nitertrain = INTEGER(intinputs)[15];
-    printall = INTEGER(intinputs)[16];
-    multi = INTEGER(intinputs)[17];
+    ndata = INTEGER(intinputs)[16];
+    printall = INTEGER(intinputs)[17];
+    multi = INTEGER(intinputs)[18];
     
     mnb = REAL(doubleinputs)[0];
     varb = REAL(doubleinputs)[1];
@@ -82,7 +83,7 @@ SEXP bayesord(SEXP intinputs, SEXP doubleinputs, SEXP Rvariables, SEXP Rxassign,
     {
         //visual check of input information
         Rprintf("\n#### Data ####\n");
-        Rprintf("number of data points = %d\n", n);
+        Rprintf("number of data points = %d\n", ndata);
         Rprintf("number of iterations = %d\n", niter);
         Rprintf("output chain summaries after every %d iterations\n", noutputsum);
 
